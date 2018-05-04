@@ -1,6 +1,8 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 from pymongo import MongoClient
 import json
+import pandas as pd
+import os
 
 app = Flask(__name__)
 
@@ -13,6 +15,14 @@ def add_fingerprint():
 @app.route('/location', methods=['POST'])
 def add_location():
     return insert_location(request.json)
+
+
+@app.route('/fingerprint/csv')
+def get_fingerprint_csv():
+    df = pd.DataFrame(list(get_fingerprint_collection().find()))
+    df.to_csv(path_or_buf=os.path.dirname(os.path.abspath(__file__)) + '/fingerprint.csv', encoding='utf-8',
+              index=False)
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='fingerprint.csv', as_attachment=True)
 
 
 def get_database():
