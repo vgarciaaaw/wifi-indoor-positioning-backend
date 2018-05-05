@@ -2,27 +2,16 @@ from flask import Flask, request, send_from_directory
 from pymongo import MongoClient
 import json
 import pandas as pd
+import numpy as np
 import os
 
 app = Flask(__name__)
 
 
+# API methods
 @app.route('/fingerprint', methods=['POST'])
 def add_fingerprint():
     return insert_fingerprint(request.json['fingerprinting'])
-
-
-def parse_fingerprint(fingerprinting):
-    fingerprint_dict = dict()
-    waypoint = dict()
-    for fingerprint in fingerprinting:
-        fingerprint_dict[fingerprint['mac']] = fingerprint['rssi']
-    fingerprint_dict['lat'] = fingerprinting[0]['lat']
-    waypoint['lat'] = fingerprinting[0]['lat']
-    fingerprint_dict['lng'] = fingerprinting[0]['lon']
-    waypoint['lng'] = fingerprinting[0]['lon']
-    fingerprint_dict['waypoint_id'] = find_waypoint_id(waypoint)
-    return fingerprint_dict
 
 
 @app.route('/location', methods=['POST'])
@@ -37,6 +26,54 @@ def get_fingerprint_csv():
               index=False)
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='fingerprint.csv',
                                as_attachment=True)
+
+
+@app.route('/attributes/config')
+def get_attributes_config():
+    df = pd.DataFrame(list(get_fingerprint_collection().find()))
+    attributes = df.columns.values
+    index = 0
+    to_delete_indexes = []
+    for attribute in attributes:
+        if attribute == '_id' or attribute == 'lat' or attribute == 'lng' or attribute == 'waypoint_id':
+            to_delete_indexes.append(index)
+        index += 1
+    attributes = np.delete(attributes, to_delete_indexes)
+    attributes_json = create_dictionary_for_attributes(attributes)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/attributes.config', 'w', encoding='utf-8') as file:
+        file.write(json.dumps(attributes_json))
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='attributes.config',
+                               as_attachment=True)
+
+
+@app.route('/classes/config')
+def get_classes_config():
+    waypoint_cursor = get_waypoint_collection().find()
+    waypoint_list = list()
+    for waypoint in waypoint_cursor:
+        waypoint_dict = dict()
+        waypoint_dict['class_id'] = str(waypoint['_id'])
+        waypoint_dict['lat'] = waypoint['lat']
+        waypoint_dict['lng'] = waypoint['lng']
+        waypoint_list.append(waypoint_dict)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/classes.config', 'w', encoding='utf-8') as file:
+        file.write(json.dumps(waypoint_list))
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='classes.config',
+                               as_attachment=True)
+
+
+# CRUD and mapping methods
+def parse_fingerprint(fingerprinting):
+    fingerprint_dict = dict()
+    waypoint = dict()
+    for fingerprint in fingerprinting:
+        fingerprint_dict[fingerprint['mac']] = fingerprint['rssi']
+    fingerprint_dict['lat'] = fingerprinting[0]['lat']
+    waypoint['lat'] = fingerprinting[0]['lat']
+    fingerprint_dict['lng'] = fingerprinting[0]['lon']
+    waypoint['lng'] = fingerprinting[0]['lon']
+    fingerprint_dict['waypoint_id'] = find_waypoint_id(waypoint)
+    return fingerprint_dict
 
 
 def get_database():
@@ -82,6 +119,15 @@ def find_waypoint_id(waypoint):
     else:
         find_result = find_result['_id']
     return find_result
+
+
+def create_dictionary_for_attributes(attributes_ndarray):
+    attributes_list = list()
+    for attribute in attributes_ndarray:
+        attribute_dict = dict()
+        attribute_dict['attribute_name'] = attribute
+        attributes_list.append(attribute_dict)
+    return attributes_list
 
 
 if __name__ == '__main__':
