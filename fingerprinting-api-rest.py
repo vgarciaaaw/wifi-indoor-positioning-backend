@@ -79,6 +79,8 @@ def find_waypoint_id(waypoint):
     find_result = get_waypoint_collection().find_one(waypoint)
     if find_result == None:
         find_result = insert_waypoint(waypoint)
+    else:
+        find_result = find_result['_id']
     return find_result
 
 
