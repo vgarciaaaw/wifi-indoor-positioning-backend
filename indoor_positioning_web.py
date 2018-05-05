@@ -9,9 +9,9 @@ app = Flask(__name__)
 
 
 # Web Frontend
-@app.route('/')
-def index():
-    return render_template('map.html')
+@app.route('/heatmap')
+def heatmap():
+    return render_template('map.html', data=json.dumps(get_locations()))
 
 
 # API methods
@@ -134,6 +134,17 @@ def create_dictionary_for_attributes(attributes_ndarray):
         attribute_dict['attribute_name'] = attribute
         attributes_list.append(attribute_dict)
     return attributes_list
+
+
+def get_locations():
+    location_list = list()
+    locations = get_location_collection().find()
+    for location in locations:
+        location_dict = dict()
+        location_dict['lat'] = location['lat']
+        location_dict['lng'] = location['lng']
+        location_list.append(location_dict)
+    return location_list
 
 
 if __name__ == '__main__':
