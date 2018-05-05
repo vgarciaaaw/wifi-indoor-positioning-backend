@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, render_template
 from pymongo import MongoClient
 import json
 import pandas as pd
@@ -6,6 +6,12 @@ import numpy as np
 import os
 
 app = Flask(__name__)
+
+
+# Web Frontend
+@app.route('/')
+def index():
+    return render_template('map.html')
 
 
 # API methods
