@@ -9,7 +9,20 @@ app = Flask(__name__)
 
 @app.route('/fingerprint', methods=['POST'])
 def add_fingerprint():
-    return insert_fingerprint(request.json)
+    return insert_fingerprint(request.json['fingerprinting'])
+
+
+def parse_fingerprint(fingerprinting):
+    fingerprint_dict = dict()
+    waypoint = dict()
+    for fingerprint in fingerprinting:
+        fingerprint_dict[fingerprint['mac']] = fingerprint['rssi']
+    fingerprint_dict['lat'] = fingerprinting[0]['lat']
+    waypoint['lat'] = fingerprinting[0]['lat']
+    fingerprint_dict['lng'] = fingerprinting[0]['lon']
+    waypoint['lng'] = fingerprinting[0]['lon']
+    fingerprint_dict['waypoint_id'] = find_waypoint_id(waypoint)
+    return fingerprint_dict
 
 
 @app.route('/location', methods=['POST'])
@@ -22,7 +35,8 @@ def get_fingerprint_csv():
     df = pd.DataFrame(list(get_fingerprint_collection().find()))
     df.to_csv(path_or_buf=os.path.dirname(os.path.abspath(__file__)) + '/fingerprint.csv', encoding='utf-8',
               index=False)
-    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='fingerprint.csv', as_attachment=True)
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='fingerprint.csv',
+                               as_attachment=True)
 
 
 def get_database():
@@ -38,10 +52,14 @@ def get_location_collection():
     return get_database().location
 
 
+def get_waypoint_collection():
+    return get_database().waypoint
+
+
 def insert_fingerprint(fingerprint):
-    insert_result = get_fingerprint_collection().insert_one(fingerprint)
+    insert_result = get_fingerprint_collection().insert_one(parse_fingerprint(fingerprint))
     result_dict = dict()
-    result_dict['fingerprint_id'] = str(insert_result.inserted_id)
+    result_dict['fingerprinting_id'] = str(insert_result.inserted_id)
     return json.dumps(result_dict)
 
 
@@ -50,6 +68,18 @@ def insert_location(location):
     result_dict = dict()
     result_dict['location_id'] = str(insert_result.inserted_id)
     return json.dumps(result_dict)
+
+
+def insert_waypoint(waypoint):
+    insert_result = get_waypoint_collection().insert_one(waypoint)
+    return insert_result.inserted_id
+
+
+def find_waypoint_id(waypoint):
+    find_result = get_waypoint_collection().find_one(waypoint)
+    if find_result == None:
+        find_result = insert_waypoint(waypoint)
+    return find_result
 
 
 if __name__ == '__main__':
