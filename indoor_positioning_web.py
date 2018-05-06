@@ -1,4 +1,5 @@
 from flask import Flask, request, send_from_directory, render_template
+from flask_socketio import SocketIO
 from pymongo import MongoClient
 import json
 import pandas as pd
@@ -6,12 +7,18 @@ import numpy as np
 import os
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 
 # Web Frontend
 @app.route('/heatmap')
 def heatmap():
-    return render_template('map.html', data=json.dumps(get_locations()))
+    return render_template('heatmap.html', data=json.dumps(get_locations()))
+
+
+@app.route('/livelocation')
+def livelocation():
+    return render_template('livelocation.html')
 
 
 # API methods
@@ -66,6 +73,12 @@ def get_classes_config():
         file.write(json.dumps(waypoint_list))
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='classes.config',
                                as_attachment=True)
+
+
+# SocketIO
+@socketio.on('location')
+def location_received(location):
+    socketio.emit('location', location)
 
 
 # CRUD and mapping methods

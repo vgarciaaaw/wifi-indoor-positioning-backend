@@ -14,9 +14,8 @@
 
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 13,
-            center: {lat: 34.9999, lng: -6.3423},
-            mapTypeId: 'satellite'
+            zoom: 20,
+            center: {lat: 39.46918482852334, lng: -6.381403729319573}
         });
 
         heatmap = new google.maps.visualization.HeatmapLayer({
@@ -29,7 +28,7 @@
         points.forEach(function (point) {
             console.log(this);
             heatmap_points.push(new google.maps.LatLng(point['lat'], point['lng']))
-        })
+        });
         return heatmap_points;
     }
 </script>
