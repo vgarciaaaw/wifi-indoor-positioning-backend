@@ -15,6 +15,9 @@ socketio = SocketIO(app)
 def heatmap():
     return render_template('heatmap.html', data=json.dumps(get_locations()))
 
+@app.route('/fingerprint/heatmap')
+def fingerprint_heatmap():
+    return render_template('heatmap.html', data=json.dumps(get_fingerprint_locations()))
 
 @app.route('/livelocation')
 def livelocation():
@@ -159,6 +162,15 @@ def get_locations():
         location_list.append(location_dict)
     return location_list
 
+def get_fingerprint_locations():
+    location_list = list()
+    fingerprints = get_fingerprint_collection().find()
+    for fingerprint in fingerprints:
+        location_dict = dict()
+        location_dict['lat'] = fingerprint['lat']
+        location_dict['lng'] = fingerprint['lng']
+        location_list.append(location_dict)
+    return location_list
 
 if __name__ == '__main__':
     app.run(threaded=True, host='0.0.0.0', port=7779)
