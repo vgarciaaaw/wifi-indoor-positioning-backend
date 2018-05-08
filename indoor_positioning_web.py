@@ -53,7 +53,7 @@ def get_attributes_config():
         index += 1
     attributes = np.delete(attributes, to_delete_indexes)
     attributes_json = create_dictionary_for_attributes(attributes)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/attributes.config', 'w', encoding='utf-8') as file:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/attributes.config', 'w') as file:
         file.write(json.dumps(attributes_json))
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='attributes.config',
                                as_attachment=True)
@@ -69,7 +69,7 @@ def get_classes_config():
         waypoint_dict['lat'] = waypoint['lat']
         waypoint_dict['lng'] = waypoint['lng']
         waypoint_list.append(waypoint_dict)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/classes.config', 'w', encoding='utf-8') as file:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/classes.config', 'w') as file:
         file.write(json.dumps(waypoint_list))
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename='classes.config',
                                as_attachment=True)
@@ -161,4 +161,4 @@ def get_locations():
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, host='0.0.0.0', port=6969)
+    app.run(threaded=True, host='0.0.0.0', port=7779)
