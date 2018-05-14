@@ -15,13 +15,14 @@
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             zoom: 20,
-            center: {lat: 39.478274, lng: -6.342032}
+            center: {lat: 39.47896890365607, lng: -6.34215496480465}
         });
 
         heatmap = new google.maps.visualization.HeatmapLayer({
             data: getPoints(),
             map: map
         });
+        heatmap.set('radius', 20);
     }
     function getPoints() {
         var heatmap_points = [];
